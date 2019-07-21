@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityFieldManager;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\field_inheritance\FieldInheritancePluginManager;
 
 /**
@@ -29,6 +30,13 @@ class FieldInheritanceForm extends EntityForm {
   protected $entityFieldManager;
 
   /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManager
+   */
+  protected $entityTypeManager;
+
+  /**
    * The field inheritance plugin manager.
    *
    * @var \Drupal\field_inheritance\FieldInheritancePluginManager
@@ -42,12 +50,15 @@ class FieldInheritanceForm extends EntityForm {
    *   The messenger service.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
    *   The entity field manager service.
+   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   *   The entity type manager service.
    * @param \Drupal\field_inheritance\FieldInheritancePluginManager $field_inheritance
    *   The field inheritance plugin manager.
    */
-  public function __construct(Messenger $messenger, EntityFieldManager $entity_field_manager, FieldInheritancePluginManager $field_inheritance) {
+  public function __construct(Messenger $messenger, EntityFieldManager $entity_field_manager, EntityTypeManager $entity_type_manager, FieldInheritancePluginManager $field_inheritance) {
     $this->messenger = $messenger;
     $this->entityFieldManager = $entity_field_manager;
+    $this->entityTypeManager = $entity_type_manager;
     $this->fieldInheritance = $field_inheritance;
   }
 
@@ -58,6 +69,7 @@ class FieldInheritanceForm extends EntityForm {
     return new static(
       $container->get('messenger'),
       $container->get('entity_field.manager'),
+      $container->get('entity_type.manager'),
       $container->get('plugin.manager.field_inheritance')
     );
   }
@@ -114,41 +126,112 @@ class FieldInheritanceForm extends EntityForm {
       '#suffix' => '</p>',
     ];
 
-    $form['source_entity_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Source Entity Type'),
-      '#description' => $this->t('Select the entity typefrom which to inherit data.'),
-      '#options' => $series_fields,
-      '#required' => TRUE,
-      '#default_value' => $field_inheritance->sourceEntityField(),
+    $entity_types = $this->entityTypeManager->getDefinitions();
+    $entity_types = array_keys($entity_types);
+    $entity_types = array_combine($entity_types, $entity_types);
+
+    $entity_bundles = $this->entityTypeManager->getDefinitions();
+    $entity_bundles = array_keys($entity_bundles);
+    $entity_bundles = array_combine($entity_bundles, $entity_bundles);
+
+    $source_fields = [];
+    //$source_fields = array_keys($this->entityFieldManager->getFieldDefinitions('eventseries', 'eventseries'));
+    //$source_fields = array_combine($source_fields, $source_fields);
+
+    $destination_fields = [];
+    //$destination_fields = array_keys($this->entityFieldManager->getFieldDefinitions('eventinstance', 'eventinstance'));
+    //$destination_fields = array_combine($destination_fields, $destination_fields);
+
+    $form['source'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Source Configuration'),
     ];
 
-    $series_fields = array_keys($this->entityFieldManager->getFieldDefinitions('eventseries', 'eventseries'));
-    $series_fields = array_combine($series_fields, $series_fields);
+    $form['source']['source_entity_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Source Entity Type'),
+      '#description' => $this->t('Select the source entity type from which to inherit data.'),
+      '#options' => $entity_types,
+      '#required' => TRUE,
+      '#default_value' => $field_inheritance->sourceEntityType(),
+      '#ajax' => [],
+    ];
 
-    $form['source_field'] = [
+    $form['source']['source_entity_bundle'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Source Entity Bundle'),
+      '#description' => $this->t('Select the source entity bundle from which to inherit data.'),
+      '#options' => $entity_bundles,
+      '#required' => TRUE,
+      '#default_value' => $field_inheritance->sourceEntityBundle(),
+      '#ajax' => [],
+      '#states' => [
+        'visible' => [
+          'select[name="source_entity_type"]' => ['!value' => ''],
+        ],
+      ],
+    ];
+
+    $form['source']['source_field'] = [
       '#type' => 'select',
       '#title' => $this->t('Source Field'),
       '#description' => $this->t('Select the field on the source entity from which to inherit data.'),
-      '#options' => $series_fields,
+      '#options' => $source_fields,
       '#required' => TRUE,
       '#default_value' => $field_inheritance->sourceField(),
+      '#states' => [
+        'visible' => [
+          'select[name="source_entity_type"]' => ['!value' => ''],
+          'select[name="source_entity_bundle"]' => ['!value' => ''],
+        ],
+      ],
     ];
 
-    $instance_fields = array_keys($this->entityFieldManager->getFieldDefinitions('eventinstance', 'eventinstance'));
-    $instance_fields = array_combine($instance_fields, $instance_fields);
+    $form['destination'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Destination Configuration'),
+    ];
 
-    $form['destination_field'] = [
+    $form['destination']['destination_entity_type'] = [
       '#type' => 'select',
-      '#title' => $this->t('Entity/Instance Field'),
-      '#description' => $this->t('Select the field on the instance to use during inheritance.'),
-      '#options' => $instance_fields,
+      '#title' => $this->t('Destination Entity Type'),
+      '#description' => $this->t('Select the destination entity type to which to inherit data.'),
+      '#options' => $entity_types,
+      '#required' => TRUE,
+      '#default_value' => $field_inheritance->destinationEntityType(),
+      '#ajax' => [],
+    ];
+
+    $form['destination']['destination_entity_bundle'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Destination Entity Bundle'),
+      '#description' => $this->t('Select the destination entity bundle to which to inherit data.'),
+      '#options' => $entity_bundles,
+      '#required' => TRUE,
+      '#default_value' => $field_inheritance->destinationEntityBundle(),
+      '#ajax' => [],
+      '#states' => [
+        'visible' => [
+          'select[name="destination_entity_type"]' => ['!value' => ''],
+        ],
+      ],
+    ];
+
+    $form['destination']['destination_field'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Destination Field'),
+      '#description' => $this->t('(Optionally) Select the field on the destination entity to use during inheritance.'),
+      '#options' => $destination_fields,
       '#states' => [
         'visible' => [
           'select[name="type"]' => ['!value' => 'inherit'],
+          'select[name="destination_entity_type"]' => ['!value' => ''],
+          'select[name="destination_entity_bundle"]' => ['!value' => ''],
         ],
         'required' => [
           'select[name="type"]' => ['!value' => 'inherit'],
+          'select[name="destination_entity_type"]' => ['!value' => ''],
+          'select[name="destination_entity_bundle"]' => ['!value' => ''],
         ],
       ],
       '#default_value' => $field_inheritance->destinationField(),
@@ -216,13 +299,13 @@ class FieldInheritanceForm extends EntityForm {
 
     switch ($status) {
       case SAVED_NEW:
-        $this->messenger->addMessage($this->t('Created the %label Field inheritance.', [
+        $this->messenger->addMessage($this->t('Created the %label field inheritance.', [
           '%label' => $field_inheritance->label(),
         ]));
         break;
 
       default:
-        $this->messenger->addMessage($this->t('Saved the %label Field inheritance.', [
+        $this->messenger->addMessage($this->t('Saved the %label field inheritance.', [
           '%label' => $field_inheritance->label(),
         ]));
     }
