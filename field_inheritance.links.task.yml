@@ -1,0 +1,5 @@
+# Field Inheritance settings admin page.
+entity.field_inheritance.collection:
+  route_name: entity.field_inheritance.collection
+  title: Field Inheritance
+  base_route: field_inheritance.settings

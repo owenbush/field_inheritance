@@ -1,0 +1,7 @@
+name: 'Field Inheritance'
+type: module
+description: 'Provides the ability to inherit data from one entity to another'
+core: 8.x
+package: 'Field Inheritance'
+dependencies:
+  - drupal:entity_reference
