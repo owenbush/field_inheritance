@@ -100,10 +100,10 @@ class FieldInheritanceForm extends EntityForm {
     ];
 
     $help = [
-      $this->t('<b>Inherit</b> - Pull field data directly from the series.'),
-      $this->t('<b>Prepend</b> - Place instance data above series data.'),
-      $this->t('<b>Append</b> - Place instance data below series data.'),
-      $this->t('<b>Fallback</b> - Show instance data, if set, otherwise show series data.'),
+      $this->t('<b>Inherit</b> - Pull field data directly from the source.'),
+      $this->t('<b>Prepend</b> - Place destination data above source data.'),
+      $this->t('<b>Append</b> - Place destination data below source data.'),
+      $this->t('<b>Fallback</b> - Show destination data, if set, otherwise show source data.'),
     ];
 
     $form['type'] = [
@@ -259,34 +259,45 @@ class FieldInheritanceForm extends EntityForm {
     parent::validateForm($form, $form_state);
     $values = $form_state->getValues();
 
-    if (!empty($values['source_field']) && !empty($values['destination_field'])) {
-      $series_definitions = $this->entityFieldManager->getFieldDefinitions('eventseries', 'eventseries');
-      $instance_definitions = $this->entityFieldManager->getFieldDefinitions('eventinstance', 'eventinstance');
+    if (!empty($values['source_entity_type'])
+      && !empty($values['destination_entity_type'])
+      && !empty($values['source_entity_bundle'])
+      && !empty($values['destination_entity_bundle'])) {
+      if (!empty($values['source_field']) && !empty($values['destination_field'])) {
+        $source_definitions = $this->entityFieldManager->getFieldDefinitions($values['source_entity_type'], $values['source_entity_bundle']);
+        $destination_definitions = $this->entityFieldManager->getFieldDefinitions($values['destination_entity_type'], $values['destination_entity_bundle']);
 
-      if ($series_definitions[$values['source_field']]->getType() !== $instance_definitions[$values['destination_field']]->getType()) {
-        $message = $this->t('Source and entity field definition types must be the same to inherit data. Source - @source_name type: @source_type. Entity - @entity_name type: @entity_type', [
-          '@source_name' => $values['source_field'],
-          '@source_type' => $series_definitions[$values['source_field']]->getType(),
-          '@entity_name' => $values['destination_field'],
-          '@entity_type' => $instance_definitions[$values['destination_field']]->getType(),
-        ]);
-        $form_state->setErrorByName('source_field', $message);
-        $form_state->setErrorByName('destination_field', $message);
+        if ($source_definitions[$values['source_field']]->getType() !== $destination_definitions[$values['destination_field']]->getType()) {
+          $message = $this->t('Source and destination field definition types must be the same to inherit data. Source - @source_name type: @source_type. Destination - @destination_name type: @destination_type', [
+            '@source_name' => $values['source_field'],
+            '@source_type' => $source_definitions[$values['source_field']]->getType(),
+            '@destination_name' => $values['destination_field'],
+            '@destination_type' => $destination_definitions[$values['destination_field']]->getType(),
+          ]);
+          $form_state->setErrorByName('source_field', $message);
+          $form_state->setErrorByName('destination_field', $message);
+        }
+
+        $plugin_definition = $this->fieldInheritance->getDefinition($values['plugin']);
+        $field_types = $plugin_definition['types'];
+
+        if (!in_array($source_definitions[$values['source_field']]->getType(), $field_types)) {
+          $message = $this->t('The selected plugin @plugin does not support @source_type fields. The supported field types are: @field_types', [
+            '@plugin' => $values['plugin'],
+            '@source_type' => $source_definitions[$values['source_field']]->getType(),
+            '@field_types' => implode(',', $field_types),
+          ]);
+          $form_state->setErrorByName('source_field', $message);
+          $form_state->setErrorByName('plugin', $message);
+        }
+
+        if ($values['source_entity_type'] == $values['destination_entity_type'] && $values['source_entity_bundle'] == $values['destination_entity_bundle']) {
+          $message = $this->t('You cannot inherit if the source and destination entities and bundles are the same.');
+          $form_state->setErrorByName('source_entity_bundle', $message);
+          $form_state->setErrorByName('destination_entity_bundle', $message);
+        }
+
       }
-
-      $plugin_definition = $this->fieldInheritance->getDefinition($values['plugin']);
-      $field_types = $plugin_definition['types'];
-
-      if (!in_array($series_definitions[$values['source_field']]->getType(), $field_types)) {
-        $message = $this->t('The selected plugin @plugin does not support @source_type fields. The supported field types are: @field_types', [
-          '@plugin' => $values['plugin'],
-          '@source_type' => $series_definitions[$values['source_field']]->getType(),
-          '@field_types' => implode(',', $field_types),
-        ]);
-        $form_state->setErrorByName('source_field', $message);
-        $form_state->setErrorByName('plugin', $message);
-      }
-
     }
   }
 
