@@ -1,0 +1,6 @@
+# Field Inheritance menu links.
+field_inheritance.field_inheritance:
+  title: 'Field inheritance'
+  description: 'Configure field inheritance for entities.'
+  route_name: field_inheritance.field_inheritance
+  parent: system.admin_structure

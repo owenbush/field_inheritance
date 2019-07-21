@@ -1,0 +1,8 @@
+# Field Inheritance routes.
+field_inheritance.field_inheritance:
+  path: '/admin/structure/field_inheritance'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Field Inheritance'
+  requirements:
+    _permission: 'administer field inheritance'
