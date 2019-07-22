@@ -279,7 +279,16 @@ class FieldInheritanceForm extends EntityForm {
       '#options' => $destination_entity_bundles,
       '#required' => TRUE,
       '#default_value' => $form_values['destination_entity_bundle'] ?? $field_inheritance->destinationEntityBundle(),
-      '#ajax' => [],
+      '#ajax' => [
+        'callback' => '::updateDestinationFields',
+        'event' => 'change',
+        'wrapper' => 'edit-destination',
+        'method' => 'replace',
+        'progress' => [
+          'type' => 'throbber',
+          'message' => $this->t('Fetching destination options...'),
+        ],
+      ],
       '#states' => [
         'visible' => [
           'select[name="destination_entity_type"]' => ['!value' => ''],
