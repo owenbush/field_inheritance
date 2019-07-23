@@ -155,22 +155,35 @@ class FieldInheritanceForm extends EntityForm {
     $source_entity_bundles = $destination_entity_bundles = [];
     $source_entity_fields = $destination_entity_fields = [];
 
+    $field_values = [];
     $form_values = $form_state->getValues();
+    if (!$field_inheritance->isNew()) {
+      $field_values['source_entity_type'] = $field_inheritance->sourceEntityType();
+      $field_values['source_entity_bundle'] = $field_inheritance->sourceEntityBundle();
+      $field_values['destination_entity_type'] = $field_inheritance->destinationEntityType();
+      $field_values['destination_entity_bundle'] = $field_inheritance->destinationEntityBundle();
+    }
+    elseif (!empty($form_values)) {
+      $field_values['source_entity_type'] = $form_values['source_entity_type'];
+      $field_values['source_entity_bundle'] = $form_values['source_entity_bundle'];
+      $field_values['destination_entity_type'] = $form_values['destination_entity_type'];
+      $field_values['destination_entity_bundle'] = $form_values['destination_entity_bundle'];
+    }
 
-    if (!empty($form_values['source_entity_type'])) {
-      $source_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($form_values['source_entity_type']));
+    if (!empty($field_values['source_entity_type'])) {
+      $source_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($field_values['source_entity_type']));
       $source_entity_bundles = array_combine($source_entity_bundles, $source_entity_bundles);
-      if (!empty($form_values['source_entity_bundle'])) {
-        $source_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($form_values['source_entity_type'], $form_values['source_entity_bundle']));
+      if (!empty($field_values['source_entity_bundle'])) {
+        $source_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($field_values['source_entity_type'], $field_values['source_entity_bundle']));
         $source_entity_fields = array_combine($source_entity_fields, $source_entity_fields);
       }
     }
 
-    if (!empty($form_values['destination_entity_type'])) {
-      $destination_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($form_values['destination_entity_type']));
+    if (!empty($field_values['destination_entity_type'])) {
+      $destination_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($field_values['destination_entity_type']));
       $destination_entity_bundles = array_combine($destination_entity_bundles, $destination_entity_bundles);
-      if (!empty($form_values['destination_entity_bundle'])) {
-        $destination_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($form_values['destination_entity_type'], $form_values['destination_entity_bundle']));
+      if (!empty($field_values['destination_entity_bundle'])) {
+        $destination_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($field_values['destination_entity_type'], $field_values['destination_entity_bundle']));
         $destination_entity_fields = array_combine($destination_entity_fields, $destination_entity_fields);
       }
     }
