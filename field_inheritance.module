@@ -8,6 +8,7 @@
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\field\Entity\FieldConfig;
 
 /**
  * Implements hook_help().
@@ -24,31 +25,55 @@ function field_inheritance_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
- * Implements hook_entity_base_field_info_alter().
+ * Implements hook_entity_bundle_field_info_alter().
  */
-function field_inheritance_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
-  if ($entity_type->id() === 'eventinstance') {
-    $inherited_fields = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple();
+function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
+  // Grab inherited fields just for the current entity type and bundle.
+  $inherited_field_ids = \Drupal::entityQuery('field_inheritance')
+    ->condition('destinationEntityType', $entity_type->id())
+    ->condition('destinationEntityBundle', $bundle)
+    ->execute();
+
+  if (!empty($inherited_field_ids)) {
+    $inherited_fields = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple($inherited_field_ids);
     if (!empty($inherited_fields)) {
       foreach ($inherited_fields as $field) {
+        // We are only interested in adding computed fields to the destination
+        // entity type.
+        if ($field->destinationEntityType() !== $entity_type->id()) {
+          continue;
+        }
+
+        // We are only interested in adding computed fields to the destination
+        // entity bundle.
+        if ($field->destinationEntityBundle() !== $bundle) {
+          continue;
+        }
+
+        // Configure the settings array with all the values from the config
+        // entity.
         $settings = [
+          'source entity type' => $field->sourceEntityType(),
+          'source entity bundle' => $field->sourceEntityBundle(),
           'source field' => $field->sourceField(),
           'method' => $field->type(),
           'plugin' => $field->plugin(),
         ];
 
-        if ($field->entityField()) {
-          $settings['entity field'] = $field->entityField();
+        // Only set the destination field if one was configured, which will be
+        // for inheritance strategies other than inherit.
+        if ($field->destinationField()) {
+          $settings['destination field'] = $field->destinationField();
         }
 
-        $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('eventseries', 'eventseries');
-
-        $type = 'string';
-        if (!empty($field_definitions[$field->sourceField()])) {
-          $settings = array_merge($settings, $field_definitions[$field->sourceField()]->getSettings());
-          $type = $field_definitions[$field->sourceField()]->getType();
+        // Grab the configuration of the source field.
+        $source_field = FieldConfig::loadByName($field->sourceEntityType(), $field->sourceEntityBundle(), $field->sourceField());
+        if (!empty($source_field)) {
+          $settings = array_merge($settings, $source_field->getSettings());
+          $type = $source_field->getType();
         }
 
+        // Set the factory class used to inherit the data from the source.
         $class = '\Drupal\field_inheritance\FieldInheritanceFactory';
         if ($field->plugin() === 'entity_reference_inheritance') {
           $class = '\Drupal\field_inheritance\EntityReferenceFieldInheritanceFactory';
@@ -57,6 +82,8 @@ function field_inheritance_entity_base_field_info_alter(&$fields, EntityTypeInte
         // Allow developers to override the class to use for a field.
         \Drupal::moduleHandler()->alter('field_inheritance_inheritance_class', $class, $field);
 
+        // Add a computed field for the inherited field to the appropriate
+        // destination entity type and bundle.
         $fields[$field->id()] = BaseFieldDefinition::create($type)
           ->setLabel(t('Inherited @label', ['@label' => $field->label()]))
           ->setName($field->id())
@@ -64,7 +91,8 @@ function field_inheritance_entity_base_field_info_alter(&$fields, EntityTypeInte
           ->setComputed(TRUE)
           ->setClass($class)
           ->setSettings($settings)
-          ->setTargetEntityTypeId($entity_type->id())
+          ->setTargetEntityTypeId($field->destinationEntityType())
+          ->setTargetBundle($field->destinationEntityBundle())
           ->setTranslatable(FALSE)
           ->setRevisionable(FALSE)
           ->setReadOnly(TRUE)

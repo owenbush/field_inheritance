@@ -72,8 +72,8 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
     $this->entity = $configuration['entity'];
     $this->method = $configuration['method'];
     $this->sourceField = $configuration['source field'];
-    if (!empty($configuration['entity field'])) {
-      $this->destinationField = $configuration['entity field'];
+    if (!empty($configuration['destination field'])) {
+      $this->destinationField = $configuration['destination field'];
     }
     $this->languageManager = $language_manager;
     $this->langCode = $this->languageManager->getCurrentLanguage()->getId();
@@ -99,6 +99,20 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
   }
 
   /**
+   * Get the configuration source entity type.
+   */
+  public function getSourceEntityType() {
+    return $this->sourceEntityType;
+  }
+
+  /**
+   * Get the configuration source entity bundle.
+   */
+  public function getSourceEntityBundle() {
+    return $this->sourceEntityBundle;
+  }
+
+  /**
    * Get the configuration source field.
    */
   public function getSourceField() {
@@ -106,7 +120,21 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
   }
 
   /**
-   * Get the configuration entity field.
+   * Get the configuration destination entity type.
+   */
+  public function getDestinationEntityType() {
+    return $this->destinationEntityType;
+  }
+
+  /**
+   * Get the configuration destination entity bundle.
+   */
+  public function getDestinationEntityBundle() {
+    return $this->destinationEntityBundle;
+  }
+
+  /**
+   * Get the configuration destination field.
    */
   public function getDestinationField() {
     return $this->destinationField;
@@ -147,11 +175,11 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
    *   The inherited data.
    */
   protected function inheritData() {
-    $series = $this->getEventSeries();
-    if ($series === FALSE) {
+    $source_entity = $this->getSourceEntity();
+    if ($source_entity === FALSE) {
       return [];
     }
-    return $series->{$this->getSourceField()}->getValue() ?? '';
+    return $source_entity->{$this->getSourceField()}->getValue() ?? '';
   }
 
   /**
@@ -161,19 +189,19 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
    *   The prepended data.
    */
   protected function prependData() {
-    $series = $this->getEventSeries();
-    $instance = $this->getEventInstance();
+    $source_entity = $this->getSourceEntity();
+    $destination_entity = $this->getDestinationEntity();
     $values = [];
 
-    if ($series === FALSE) {
+    if ($source_entity === FALSE) {
       return $values;
     }
 
-    if (!empty($instance->{$this->getDestinationField()}->getValue())) {
-      $values = array_merge($values, $instance->{$this->getDestinationField()}->getValue());
+    if (!empty($destination_entity->{$this->getDestinationField()}->getValue())) {
+      $values = array_merge($values, $destination_entity->{$this->getDestinationField()}->getValue());
     }
-    if (!empty($series->{$this->getSourceField()}->getValue())) {
-      $values = array_merge($values, $series->{$this->getSourceField()}->getValue());
+    if (!empty($source_entity->{$this->getSourceField()}->getValue())) {
+      $values = array_merge($values, $source_entity->{$this->getSourceField()}->getValue());
     }
     return $values;
   }
@@ -185,19 +213,19 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
    *   The appended data.
    */
   protected function appendData() {
-    $series = $this->getEventSeries();
-    $instance = $this->getEventInstance();
+    $source_entity = $this->getSourceEntity();
+    $destination_entity = $this->getDestinationEntity();
     $values = [];
 
-    if ($series === FALSE) {
+    if ($source_entity === FALSE) {
       return $values;
     }
 
-    if (!empty($series->{$this->getSourceField()}->getValue())) {
-      $values = array_merge($values, $series->{$this->getSourceField()}->getValue());
+    if (!empty($source_entity->{$this->getSourceField()}->getValue())) {
+      $values = array_merge($values, $source_entity->{$this->getSourceField()}->getValue());
     }
-    if (!empty($instance->{$this->getDestinationField()}->getValue())) {
-      $values = array_merge($values, $instance->{$this->getDestinationField()}->getValue());
+    if (!empty($destination_entity->{$this->getDestinationField()}->getValue())) {
+      $values = array_merge($values, $destination_entity->{$this->getDestinationField()}->getValue());
     }
     return $values;
   }
@@ -209,19 +237,19 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
    *   The fallback data.
    */
   protected function fallbackData() {
-    $series = $this->getEventSeries();
-    $instance = $this->getEventInstance();
+    $source_entity = $this->getSourceEntity();
+    $destination_entity = $this->getDestinationEntity();
     $values = [];
 
-    if ($series === FALSE) {
+    if ($source_entity === FALSE) {
       return $values;
     }
 
-    if (!empty($instance->{$this->getDestinationField()}->getValue())) {
-      $values = $instance->{$this->getDestinationField()}->getValue();
+    if (!empty($destination_entity->{$this->getDestinationField()}->getValue())) {
+      $values = $destination_entity->{$this->getDestinationField()}->getValue();
     }
-    elseif (!empty($series->{$this->getSourceField()}->getValue())) {
-      $values = $series->{$this->getSourceField()}->getValue();
+    elseif (!empty($source_entity->{$this->getSourceField()}->getValue())) {
+      $values = $source_entity->{$this->getSourceField()}->getValue();
     }
     return $values;
   }
@@ -239,15 +267,15 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
     }
 
     $method = $this->getMethod();
-    $entity_field_methods = [
+    $destination_field_methods = [
       'prepend',
       'append',
       'fallback',
     ];
 
-    if (array_search($method, $entity_field_methods)) {
+    if (array_search($method, $destination_field_methods)) {
       if (empty($this->getDestinationField())) {
-        throw new \InvalidArgumentException("The definition's 'entity field' key must be set to prepend, append, or fallback to series data.");
+        throw new \InvalidArgumentException("The definition's 'destination field' key must be set to prepend, append, or fallback to series data.");
       }
     }
 
@@ -255,29 +283,29 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
   }
 
   /**
-   * Get the translated eventseries entity.
+   * Get the translated source entity.
    *
    * @return Drupal\Core\Entity\EntityInterface|bool
-   *   The translated eventseries entity, or FALSE.
+   *   The translated source entity, or FALSE.
    */
-  protected function getEventSeries() {
-    $series = $this->entity->getEventSeries();
-    if (empty($series)) {
+  protected function getSourceEntity() {
+    $entity = $this->entity;
+    if (empty($entity)) {
       return FALSE;
     }
-    if ($series->hasTranslation($this->langCode)) {
-      return $series->getTranslation($this->langCode);
+    if ($entity->hasTranslation($this->langCode)) {
+      return $entity->getTranslation($this->langCode);
     }
-    return $series;
+    return $entity;
   }
 
   /**
-   * Get the translated eventinstance entity.
+   * Get the translated destination entity.
    *
    * @return Drupal\Core\Entity\EntityInterface
-   *   The translated eventinstance entity.
+   *   The translated destination entity.
    */
-  protected function getEventInstance() {
+  protected function getDestinationEntity() {
     if ($this->entity->hasTranslation($this->langCode)) {
       return $this->entity->getTranslation($this->langCode);
     }

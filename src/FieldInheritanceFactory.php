@@ -39,6 +39,14 @@ class FieldInheritanceFactory extends FieldItemList {
       throw new \InvalidArgumentException("The definition's 'method' key has to specify the method to use to inherit data. Valid options are inherit, prepend, replace, and append.");
     }
 
+    if ($this->getSetting('source entity type') === NULL) {
+      throw new \InvalidArgumentException("The definition's 'source entity type' key has to specify the entity type from which to inherit data.");
+    }
+
+    if ($this->getSetting('source entity bundle') === NULL) {
+      throw new \InvalidArgumentException("The definition's 'source entity bundle' key has to specify the entity bundle from which to inherit data.");
+    }
+
     if ($this->getSetting('source field') === NULL) {
       throw new \InvalidArgumentException("The definition's 'source field' key has to specify the field from which to inherit data.");
     }
