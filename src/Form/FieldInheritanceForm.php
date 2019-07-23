@@ -92,12 +92,15 @@ class FieldInheritanceForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
+    $field_inheritance = $this->entity;
 
     // This form needs AJAX support.
     $form['#attached']['library'][] = 'core/jquery.form';
     $form['#attached']['library'][] = 'core/drupal.ajax';
 
-    $field_inheritance = $this->entity;
+    $form['#prefix'] = '<div id="field-inheritance-add-form--wrapper">';
+    $form['#suffix'] = '</div>';
+
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
@@ -154,34 +157,21 @@ class FieldInheritanceForm extends EntityForm {
 
     $form_values = $form_state->getValues();
 
-    $triggering_element = $form_state->getTriggeringElement();
+    if (!empty($form_values['source_entity_type'])) {
+      $source_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($form_values['source_entity_type']));
+      $source_entity_bundles = array_combine($source_entity_bundles, $source_entity_bundles);
+      if (!empty($form_values['source_entity_bundle'])) {
+        $source_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($form_values['source_entity_type'], $form_values['source_entity_bundle']));
+        $source_entity_fields = array_combine($source_entity_fields, $source_entity_fields);
+      }
+    }
 
-    // We are responding to a potential AJAX request to rebuild the form.
-    if (!empty($triggering_element)) {
-      switch ($triggering_element['#name']) {
-        case 'source_entity_type':
-        case 'source_entity_bundle':
-          if (!empty($form_values['source_entity_type'])) {
-            $source_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($form_values['source_entity_type']));
-            $source_entity_bundles = array_combine($source_entity_bundles, $source_entity_bundles);
-            if (!empty($form_values['source_entity_bundle'])) {
-              $source_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($form_values['source_entity_type'], $form_values['source_entity_bundle']));
-              $source_entity_fields = array_combine($source_entity_fields, $source_entity_fields);
-            }
-          }
-          break;
-
-        case 'destination_entity_type':
-        case 'destination_entity_bundle':
-          if (!empty($form_values['destination_entity_type'])) {
-            $destination_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($form_values['destination_entity_type']));
-            $destination_entity_bundles = array_combine($destination_entity_bundles, $destination_entity_bundles);
-            if (!empty($form_values['destination_entity_bundle'])) {
-              $destination_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($form_values['destination_entity_type'], $form_values['destination_entity_bundle']));
-              $destination_entity_fields = array_combine($destination_entity_fields, $destination_entity_fields);
-            }
-          }
-          break;
+    if (!empty($form_values['destination_entity_type'])) {
+      $destination_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($form_values['destination_entity_type']));
+      $destination_entity_bundles = array_combine($destination_entity_bundles, $destination_entity_bundles);
+      if (!empty($form_values['destination_entity_bundle'])) {
+        $destination_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($form_values['destination_entity_type'], $form_values['destination_entity_bundle']));
+        $destination_entity_fields = array_combine($destination_entity_fields, $destination_entity_fields);
       }
     }
 
@@ -196,12 +186,12 @@ class FieldInheritanceForm extends EntityForm {
       '#description' => $this->t('Select the source entity type from which to inherit data.'),
       '#options' => $entity_types,
       '#required' => TRUE,
-      '#default_value' => $form_values['source_entity_type'] ?? $field_inheritance->sourceEntityType(),
+      '#default_value' => $field_inheritance->sourceEntityType(),
       '#ajax' => [
-        'callback' => '::updateSourceFields',
+        'callback' => '::updateFieldOptions',
         'event' => 'change',
-        'wrapper' => 'edit-source',
         'method' => 'replace',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching source options...'),
@@ -215,12 +205,12 @@ class FieldInheritanceForm extends EntityForm {
       '#description' => $this->t('Select the source entity bundle from which to inherit data.'),
       '#options' => $source_entity_bundles,
       '#required' => TRUE,
-      '#default_value' => $form_values['source_entity_bundle'] ?? $field_inheritance->sourceEntityBundle(),
+      '#default_value' => $field_inheritance->sourceEntityBundle(),
       '#ajax' => [
-        'callback' => '::updateSourceFields',
+        'callback' => '::updateFieldOptions',
         'event' => 'change',
-        'wrapper' => 'edit-source',
         'method' => 'replace',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching source options...'),
@@ -239,7 +229,7 @@ class FieldInheritanceForm extends EntityForm {
       '#description' => $this->t('Select the field on the source entity from which to inherit data.'),
       '#options' => $source_entity_fields,
       '#required' => TRUE,
-      '#default_value' => $form_values['source_field'] ?? $field_inheritance->sourceField(),
+      '#default_value' => $field_inheritance->sourceField(),
       '#states' => [
         'visible' => [
           'select[name="source_entity_type"]' => ['!value' => ''],
@@ -259,12 +249,12 @@ class FieldInheritanceForm extends EntityForm {
       '#description' => $this->t('Select the destination entity type to which to inherit data.'),
       '#options' => $entity_types,
       '#required' => TRUE,
-      '#default_value' => $form_values['destination_entity_type'] ?? $field_inheritance->destinationEntityType(),
+      '#default_value' => $field_inheritance->destinationEntityType(),
       '#ajax' => [
-        'callback' => '::updateDestinationFields',
+        'callback' => '::updateFieldOptions',
         'event' => 'change',
-        'wrapper' => 'edit-destination',
         'method' => 'replace',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching destination options...'),
@@ -278,12 +268,12 @@ class FieldInheritanceForm extends EntityForm {
       '#description' => $this->t('Select the destination entity bundle to which to inherit data.'),
       '#options' => $destination_entity_bundles,
       '#required' => TRUE,
-      '#default_value' => $form_values['destination_entity_bundle'] ?? $field_inheritance->destinationEntityBundle(),
+      '#default_value' => $field_inheritance->destinationEntityBundle(),
       '#ajax' => [
-        'callback' => '::updateDestinationFields',
+        'callback' => '::updateFieldOptions',
         'event' => 'change',
-        'wrapper' => 'edit-destination',
         'method' => 'replace',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching destination options...'),
@@ -301,7 +291,7 @@ class FieldInheritanceForm extends EntityForm {
       '#title' => $this->t('Destination Field'),
       '#description' => $this->t('(Optionally) Select the field on the destination entity to use during inheritance.'),
       '#options' => $destination_entity_fields,
-      '#default_value' => $form_values['destination_field'] ?? $field_inheritance->destinationField(),
+      '#default_value' => $field_inheritance->destinationField(),
       '#states' => [
         'visible' => [
           'select[name="type"]' => ['!value' => 'inherit'],
@@ -404,17 +394,10 @@ class FieldInheritanceForm extends EntityForm {
   }
 
   /**
-   * AJAX Callback: Update Source Fields.
+   * AJAX Callback: Update Field Options.
    */
-  public function updateSourceFields(array &$form, FormStateInterface $form_state) {
-    return $form['source'];
-  }
-
-  /**
-   * AJAX Callback: Update Destination Fields.
-   */
-  public function updateDestinationFields(array &$form, FormStateInterface $form_state) {
-    return $form['destination'];
+  public function updateFieldOptions(array &$form, FormStateInterface $form_state) {
+    return $form;
   }
 
 }
