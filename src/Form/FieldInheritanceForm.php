@@ -374,7 +374,14 @@ class FieldInheritanceForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
     $field_inheritance = $this->entity;
+    $field_inheritance->setSourceEntityType($values['source_entity_type']);
+    $field_inheritance->setSourceEntityBundle($values['source_entity_bundle']);
+    $field_inheritance->setSourceField($values['source_field']);
+    $field_inheritance->setDestinationEntityType($values['destination_entity_type']);
+    $field_inheritance->setDestinationEntityBundle($values['destination_entity_bundle']);
+    $field_inheritance->setDestinationField($values['destination_field']);
     $status = $field_inheritance->save();
 
     switch ($status) {
