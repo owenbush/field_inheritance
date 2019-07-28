@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityForm;
 
 /**
  * Implements hook_help().
@@ -107,7 +108,8 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
  * Implements hook_form_alter().
  */
 function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  if (!empty($form_state->getFormObject())) {
+  $form_object = $form_state->getFormObject();
+  if (!empty($form_object) && $form_object instanceof EntityForm) {
     $entity = $form_state->getFormObject()->getEntity();
     if (!empty($entity)) {
       $entity_type = $entity->getEntityTypeId();
@@ -121,30 +123,33 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
       if (!empty($inherited_field_ids)) {
         $inherited_fields = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple($inherited_field_ids);
 
-        if (!empty($inherited_fields)) {
-          $form['#submit'][] = 'field_inheritance_entity_form_submit';
-          $form['field_inheritance'] = [
-            '#type' => 'details',
-            '#open' => TRUE,
-            '#title' => t('Field Inheritance'),
-          ];
+        $form['#submit'][] = 'field_inheritance_entity_form_submit';
+        $form['field_inheritance'] = [
+          '#type' => 'details',
+          '#open' => TRUE,
+          '#title' => t('Field Inheritance'),
+          '#attributes' => [
+            'id' => 'field-inheritance--wrapper',
+          ],
+        ];
 
-          $form['field_inheritance']['field_inheritance_enable'] = [
-            '#type' => 'checkbox',
-            '#title' => t('Enable inheritance for this entity?'),
-            '#description' => t('Enabling inheritance will allow data to be pulled in from a source entity into this entity.'),
-          ];
+        $form['field_inheritance']['field_inheritance_enable'] = [
+          '#type' => 'checkbox',
+          '#title' => t('Enable inheritance for this entity?'),
+          '#description' => t('Enabling inheritance will allow data to be pulled in from a source entity into this entity.'),
+        ];
 
-          $form['field_inheritance']['fields'] = [
-            '#type' => 'fieldset',
-            '#title' => t('Field Mappings'),
-            '#states' => [
-              'visible' => [
-                'input[name="field_inheritance_enable"]' => ['checked' => TRUE],
-              ],
+        $form['field_inheritance']['fields'] = [
+          '#type' => 'fieldset',
+          '#title' => t('Field Mappings'),
+          '#states' => [
+            'visible' => [
+              'input[name="field_inheritance_enable"]' => ['checked' => TRUE],
             ],
-          ];
+          ],
+        ];
 
+        if (!empty($inherited_fields)) {
           foreach ($inherited_fields as $field) {
             $form['field_inheritance']['fields']['field_inheritance_' . $field->id()] = [
               '#type' => 'details',
@@ -177,6 +182,29 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
             ];
           }
         }
+        
+        $form['field_inheritance']['fields']['add'] = [
+          '#type' => 'fieldset',
+          'message' => [
+            '#type' => 'markup',
+            '#prefix' => '<p>',
+            '#markup' => t('Add a new field inheritance field to this entity type and bundle.'),
+            '#suffix' => '</p>',
+          ],
+          'add_field_inheritance' => [
+            '#type' => 'submit',
+            '#value' => t('Add Field Inheritance'),
+            '#ajax' => [
+              'callback' => 'field_inheritance_entity_form_add',
+              'event' => 'click',
+              'wrapper' => 'field-inheritance--wrapper',
+              'progress' => [
+                'type' => 'throbber',
+                'message' => t('Adding field inheritance...'),
+              ],
+            ],
+          ],
+        ];
       }
     }
   }
@@ -187,4 +215,12 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
  */
 function field_inheritance_entity_form_submit(&$form, FormStateInterface $form_state) {
   $entity = $form_state->getFormObject()->getEntity();
+  $values = $form_state->getValue('field_inheritance');
+}
+
+/**
+ * AJAX Form Callback: Field Inheritance Entity Form.
+ */
+function field_inheritance_entity_form_add(&$form, FormStateInterface $form_state) {
+
 }
