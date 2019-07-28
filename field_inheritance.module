@@ -9,6 +9,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_help().
@@ -100,4 +101,90 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
       }
     }
   }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if (!empty($form_state->getFormObject())) {
+    $entity = $form_state->getFormObject()->getEntity();
+    if (!empty($entity)) {
+      $entity_type = $entity->getEntityTypeId();
+      $bundle = $entity->bundle();
+
+      $inherited_field_ids = \Drupal::entityQuery('field_inheritance')
+      ->condition('destinationEntityType', $entity_type)
+      ->condition('destinationEntityBundle', $bundle)
+      ->execute();
+
+      if (!empty($inherited_field_ids)) {
+        $inherited_fields = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple($inherited_field_ids);
+
+        if (!empty($inherited_fields)) {
+          $form['#submit'][] = 'field_inheritance_entity_form_submit';
+          $form['field_inheritance'] = [
+            '#type' => 'details',
+            '#open' => TRUE,
+            '#title' => t('Field Inheritance'),
+          ];
+
+          $form['field_inheritance']['field_inheritance_enable'] = [
+            '#type' => 'checkbox',
+            '#title' => t('Enable inheritance for this entity?'),
+            '#description' => t('Enabling inheritance will allow data to be pulled in from a source entity into this entity.'),
+          ];
+
+          $form['field_inheritance']['fields'] = [
+            '#type' => 'fieldset',
+            '#title' => t('Field Mappings'),
+            '#states' => [
+              'visible' => [
+                'input[name="field_inheritance_enable"]' => ['checked' => TRUE],
+              ],
+            ],
+          ];
+
+          foreach ($inherited_fields as $field) {
+            $form['field_inheritance']['fields']['field_inheritance_' . $field->id()] = [
+              '#type' => 'details',
+              '#open' => TRUE,
+              '#title' => t('Entity Mapping for @label [@entity: @bundle - @field]', [
+                '@label' => $field->label(),
+                '@entity' => $field->sourceEntityType(),
+                '@bundle' => $field->sourceEntityBundle(),
+                '@field' => $field->sourceField(),
+              ]),
+              'field_inheritance_' . $field->id() . '_skip' => [
+                '#type' => 'checkbox',
+                '#title' => t('Do not inherit this field'),
+                '#description' => t('Checking this box will prevent data from being inherited for this field on this entity.'),
+              ],
+              'field_inheritance_' . $field->id() . '_entity' => [
+                '#type' => 'entity_autocomplete',
+                '#title' => t('Source Entity'),
+                '#description' => t('Enter the name of the %bundle from which to inherit data.', [
+                  '%bundle' => $field->sourceEntityBundle(),
+                ]),
+                '#target_type' => $field->sourceEntityType(),
+                '#selection_settings' => ['target_bundles' => [$field->sourceEntityBundle()]],
+                '#states' => [
+                  'invisible' => [
+                    'input[name="field_inheritance_' . $field->id() . '_skip"]' => ['checked' => TRUE]
+                  ],
+                ],
+              ],
+            ];
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Form Submit Callback: Field Inheritance Entity Form.
+ */
+function field_inheritance_entity_form_submit(&$form, FormStateInterface $form_state) {
+  $entity = $form_state->getFormObject()->getEntity();
 }
