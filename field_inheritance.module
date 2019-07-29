@@ -89,7 +89,7 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
         // Add a computed field for the inherited field to the appropriate
         // destination entity type and bundle.
         $fields[$field->id()] = BaseFieldDefinition::create($type)
-          ->setLabel(t('Inherited @label', ['@label' => $field->label()]))
+          ->setLabel(t('@label', ['@label' => $field->label()]))
           ->setName($field->id())
           ->setDescription(t('The inherited field: @field', ['@field' => $field->label()]))
           ->setComputed(TRUE)
