@@ -118,7 +118,6 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
       $state_key = $entity->getEntityTypeId() . ':' . $entity->uuid();
       $state = \Drupal::keyValue('field_inheritance');
       $state_values = $state->get($state_key);
-      ksm($state_values);
 
       $form['actions']['submit']['#submit'][] = 'field_inheritance_entity_form_submit';
       $form['field_inheritance'] = [
