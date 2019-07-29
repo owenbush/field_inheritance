@@ -11,6 +11,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\FieldableEntityInterface;
 
 /**
  * Implements hook_help().
@@ -112,7 +113,7 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
   $form_object = $form_state->getFormObject();
   if (!empty($form_object) && $form_object instanceof EntityForm) {
     $entity = $form_state->getFormObject()->getEntity();
-    if (!empty($entity)) {
+    if (!empty($entity) && $entity instanceof FieldableEntityInterface) {
       $entity_type = $entity->getEntityTypeId();
       $bundle = $entity->bundle();
 
