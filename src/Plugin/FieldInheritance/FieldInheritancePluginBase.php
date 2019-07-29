@@ -7,11 +7,20 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\field_inheritance\FieldInheritancePluginInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\KeyValueStore\KeyValueFactory;
 
 /**
  * Abstract class FieldInheritancePluginBase.
  */
 abstract class FieldInheritancePluginBase extends PluginBase implements FieldInheritancePluginInterface, ContainerFactoryPluginInterface {
+
+  /**
+   * The field inheritance id.
+   *
+   * @var int
+   */
+  protected $fieldInheritanceId;
 
   /**
    * The entity.
@@ -26,6 +35,13 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
    * @var string
    */
   protected $method;
+
+  /**
+   * The source entity type used to inherit.
+   *
+   * @var string
+   */
+  protected $sourceEntityType;
 
   /**
    * The source field used to inherit.
@@ -56,6 +72,20 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
   protected $langCode;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManager
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The key value store.
+   *
+   * @var \Drupal\Core\KeyValueStore\KeyValueFactory
+   */
+  protected $keyValue;
+
+  /**
    * Constructs a FieldInheritancePluginBase object.
    *
    * @param array $configuration
@@ -66,17 +96,25 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
    *   The plugin definition.
    * @param Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager service.
+   * @param Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   *   The entity type manager.
+   * @param Drupal\Core\KeyValueStore\KeyValueFactory $key_value
+   *   The key value store.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $language_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LanguageManagerInterface $language_manager, EntityTypeManager $entity_type_manager, KeyValueFactory $key_value) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->fieldInheritanceId = $configuration['id'];
     $this->entity = $configuration['entity'];
     $this->method = $configuration['method'];
+    $this->sourceEntityType = $configuration['source entity type'];
     $this->sourceField = $configuration['source field'];
     if (!empty($configuration['destination field'])) {
       $this->destinationField = $configuration['destination field'];
     }
     $this->languageManager = $language_manager;
     $this->langCode = $this->languageManager->getCurrentLanguage()->getId();
+    $this->entityTypeManager = $entity_type_manager;
+    $this->keyValue = $key_value;
   }
 
   /**
@@ -87,7 +125,9 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('language_manager')
+      $container->get('language_manager'),
+      $container->get('entity_type.manager'),
+      $container->get('keyvalue')
     );
   }
 
@@ -293,10 +333,18 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
     if (empty($entity)) {
       return FALSE;
     }
-    if ($entity->hasTranslation($this->langCode)) {
-      return $entity->getTranslation($this->langCode);
+    $state_key = $entity->getEntityTypeId() . ':' . $entity->uuid();
+    $state = $this->keyValue->get('field_inheritance');
+    $state_values = $state->get($state_key);
+
+    if (!empty($state_values[$this->fieldInheritanceId]['entity'])) {
+      $source = $this->entityTypeManager->getStorage($this->sourceEntityType)->load($state_values[$this->fieldInheritanceId]['entity']);
+      if ($source->hasTranslation($this->langCode)) {
+        return $source->getTranslation($this->langCode);
+      }
     }
-    return $entity;
+
+    return FALSE;
   }
 
   /**

@@ -55,6 +55,7 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
         // Configure the settings array with all the values from the config
         // entity.
         $settings = [
+          'id' => $field->id(),
           'source entity type' => $field->sourceEntityType(),
           'source entity bundle' => $field->sourceEntityBundle(),
           'source field' => $field->sourceField(),
