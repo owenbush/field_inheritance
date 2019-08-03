@@ -12,6 +12,10 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
@@ -122,6 +126,7 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
       $state_values = $state->get($state_key);
 
       $form['actions']['submit']['#submit'][] = 'field_inheritance_entity_form_submit';
+      $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
       $form['field_inheritance'] = [
         '#type' => 'details',
         '#open' => TRUE,
@@ -149,9 +154,9 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
       ];
 
       $inherited_field_ids = \Drupal::entityQuery('field_inheritance')
-      ->condition('destinationEntityType', $entity_type)
-      ->condition('destinationEntityBundle', $bundle)
-      ->execute();
+        ->condition('destinationEntityType', $entity_type)
+        ->condition('destinationEntityBundle', $bundle)
+        ->execute();
 
       if (!empty($inherited_field_ids)) {
         $inherited_fields = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple($inherited_field_ids);
@@ -194,6 +199,7 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
       }
       $form['field_inheritance']['fields']['add'] = [
         '#type' => 'fieldset',
+        '#access' => \Drupal::currentUser()->hasPermission('administer field inheritance'),
         'message' => [
           '#type' => 'markup',
           '#prefix' => '<p>',
@@ -203,13 +209,22 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
         'add_field_inheritance' => [
           '#type' => 'submit',
           '#value' => t('Add Field Inheritance'),
+          '#attributes' => [
+            'class' => [
+              'use-ajax',
+            ],
+          ],
           '#ajax' => [
             'callback' => 'field_inheritance_entity_form_add',
             'event' => 'click',
-            'wrapper' => 'field-inheritance--wrapper',
-            'progress' => [
-              'type' => 'throbber',
-              'message' => t('Adding field inheritance...'),
+            'url' => Url::fromRoute('field_inheritance.creation_form', [
+              'entity_type' => $entity->getEntityTypeId(),
+              'entity_bundle' => $entity->bundle(),
+            ]),
+            'options' => [
+              'query' => [
+                FormBuilderInterface::AJAX_FORM_REQUEST => TRUE,
+              ],
             ],
           ],
         ],
@@ -259,5 +274,13 @@ function field_inheritance_entity_form_submit(&$form, FormStateInterface $form_s
  * AJAX Form Callback: Field Inheritance Entity Form.
  */
 function field_inheritance_entity_form_add(&$form, FormStateInterface $form_state) {
+  $entity = $form_state->getFormObject()->getEntity();
+  $inheritance_entity = \Drupal::entityTypeManager()->getStorage('field_inheritance')->create();
+  $inheritance_entity->setDestinationEntityType($entity->getEntityTypeId());
+  $inheritance_entity->setDestinationEntityBundle($entity->bundle());
 
+  $response = new AjaxResponse();
+  $modal_form = \Drupal::service('entity.form_builder')->getForm($inheritance_entity, 'add');
+  $response->addCommand(new OpenModalDialogCommand('Add Field Inheritance', $modal_form, ['width' => '800']));
+  return $response;
 }

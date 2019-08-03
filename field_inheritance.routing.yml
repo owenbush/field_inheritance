@@ -6,3 +6,12 @@ field_inheritance.field_inheritance:
     _title: 'Field Inheritance'
   requirements:
     _permission: 'administer field inheritance'
+
+# AJAX Field Inheritance creation form
+field_inheritance.creation_form:
+  path: '/ajax/field_inheritance/creation/{entity_type}/{entity_bundle}'
+  defaults:
+    _title: 'Create Field Inheritance'
+    _controller: '\Drupal\field_inheritance\Controller\FieldInheritanceController::ajaxCreationForm'
+  requirements:
+    _permission: 'administer field inheritance'
