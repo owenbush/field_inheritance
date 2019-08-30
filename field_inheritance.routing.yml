@@ -7,7 +7,7 @@ field_inheritance.field_inheritance:
   requirements:
     _permission: 'administer field inheritance'
 
-# AJAX Field Inheritance creation form
+# AJAX Field Inheritance creation form.
 field_inheritance.creation_form:
   path: '/ajax/field_inheritance/creation/{entity_type}/{entity_bundle}'
   defaults:

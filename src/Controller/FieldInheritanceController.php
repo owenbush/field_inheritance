@@ -6,39 +6,14 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\EntityFormBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Form\FormState;
+use Drupal\field_inheritance\Entity\FieldInheritance;
 
 /**
  * The FieldInheritanceController class.
  */
 class FieldInheritanceController extends ControllerBase implements ContainerInjectionInterface {
-
-  /**
-   * The form builder.
-   *
-   * @var \Drupal\Core\Entity\EntityFormBuilder
-   */
-  protected $formBuilder;
-
-  /**
-   * Constructs a FieldInheritanceController object.
-   *
-   * @param \Drupal\Core\Entity\EntityFormBuilder $formBuilder
-   *   The form builder.
-   */
-  public function __construct(EntityFormBuilder $formBuilder) {
-    $this->formBuilder = $formBuilder;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity.form_builder')
-    );
-  }
 
   /**
    * Gets the creation form in a modal.
@@ -52,12 +27,20 @@ class FieldInheritanceController extends ControllerBase implements ContainerInje
    *   Returns an ajax response.
    */
   public function ajaxCreationForm($entity_type = NULL , $entity_bundle = NULL) {
-    $inheritance_entity = \Drupal::entityTypeManager()->getStorage('field_inheritance')->create();
+    $inheritance_entity = $this->entityTypeManager()->getStorage('field_inheritance')->create();
     $inheritance_entity->setDestinationEntityType($entity_type);
     $inheritance_entity->setDestinationEntityBundle($entity_bundle);
 
+    $form_object = $this->entityTypeManager()->getFormObject('field_inheritance', 'add');
+    $form_object->setEntity($inheritance_entity);
+    $form_state = (new FormState())
+      ->setFormObject($form_object)
+      ->disableRedirect();
+
+    $modal_form = $this->formBuilder()->buildForm($form_object, $form_state);
+    $modal_form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+
     $response = new AjaxResponse();
-    $modal_form = $this->formBuilder->getForm($inheritance_entity, 'add');
     $response->addCommand(new OpenModalDialogCommand('Add Field Inheritance', $modal_form, ['width' => '800']));
     return $response;
   }

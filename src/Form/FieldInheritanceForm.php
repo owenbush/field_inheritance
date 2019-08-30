@@ -12,7 +12,8 @@ use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\field_inheritance\FieldInheritancePluginManager;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Url;
 
 /**
  * Class FieldInheritanceForm.
@@ -172,6 +173,14 @@ class FieldInheritanceForm extends EntityForm {
       $field_values['destination_entity_bundle'] = $form_values['destination_entity_bundle'];
     }
 
+    if (!empty($field_inheritance->destinationEntityType()) && empty($form_values)) {
+      $field_values['destination_entity_type'] = $field_inheritance->destinationEntityType();
+    }
+
+    if (!empty($field_inheritance->destinationEntityBundle()) && empty($form_values)) {
+      $field_values['destination_entity_bundle'] = $field_inheritance->destinationEntityBundle();
+    }
+
     if (!empty($field_values['source_entity_type'])) {
       $source_entity_bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($field_values['source_entity_type']));
       $source_entity_bundles = array_combine($source_entity_bundles, $source_entity_bundles);
@@ -203,9 +212,9 @@ class FieldInheritanceForm extends EntityForm {
       '#required' => TRUE,
       '#default_value' => $field_inheritance->sourceEntityType(),
       '#ajax' => [
-        'callback' => [$this, 'updateFieldOptions'],
+        'callback' => '::updateFieldOptions',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'event' => 'change',
-        'options' => ['query' => ['ajax_form' => 1]],
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching source options...'),
@@ -221,9 +230,9 @@ class FieldInheritanceForm extends EntityForm {
       '#required' => TRUE,
       '#default_value' => $field_inheritance->sourceEntityBundle(),
       '#ajax' => [
-        'callback' => [$this, 'updateFieldOptions'],
+        'callback' => '::updateFieldOptions',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'event' => 'change',
-        'options' => ['query' => ['ajax_form' => 1]],
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching source options...'),
@@ -264,9 +273,9 @@ class FieldInheritanceForm extends EntityForm {
       '#required' => TRUE,
       '#default_value' => $field_inheritance->destinationEntityType(),
       '#ajax' => [
-        'callback' => [$this, 'updateFieldOptions'],
+        'callback' => '::updateFieldOptions',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'event' => 'change',
-        'options' => ['query' => ['ajax_form' => 1]],
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching destination options...'),
@@ -282,9 +291,9 @@ class FieldInheritanceForm extends EntityForm {
       '#required' => TRUE,
       '#default_value' => $field_inheritance->destinationEntityBundle(),
       '#ajax' => [
-        'callback' => [$this, 'updateFieldOptions'],
+        'callback' => '::updateFieldOptions',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
         'event' => 'change',
-        'options' => ['query' => ['ajax_form' => 1]],
         'progress' => [
           'type' => 'throbber',
           'message' => $this->t('Fetching destination options...'),
@@ -415,8 +424,9 @@ class FieldInheritanceForm extends EntityForm {
    * AJAX Callback: Update Field Options.
    */
   public function updateFieldOptions(array &$form, FormStateInterface $form_state) {
-    $response = new AjaxResponse;
-    $response->addCommand(new ReplaceCommand('#field-inheritance-add-form--wrapper', $form));
+    $form_state->setRebuild();
+    $response = new AjaxResponse();
+    $response->addCommand(new HtmlCommand('#field-inheritance-add-form--wrapper', $form));
     return $response;
   }
 

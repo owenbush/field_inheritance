@@ -16,6 +16,7 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Url;
+use Drupal\Component\Serialization\Json;
 
 /**
  * Implements hook_help().
@@ -207,25 +208,16 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
           '#suffix' => '</p>',
         ],
         'add_field_inheritance' => [
-          '#type' => 'submit',
-          '#value' => t('Add Field Inheritance'),
+          '#type' => 'link',
+          '#title' => t('Add Field Inheritance'),
+          '#url' => Url::fromRoute('field_inheritance.creation_form', [
+            'entity_type' => $entity->getEntityTypeId(),
+            'entity_bundle' => $entity->bundle(),
+          ]),
           '#attributes' => [
-            'class' => [
-              'use-ajax',
-            ],
-          ],
-          '#ajax' => [
-            'callback' => 'field_inheritance_entity_form_add',
-            'event' => 'click',
-            'url' => Url::fromRoute('field_inheritance.creation_form', [
-              'entity_type' => $entity->getEntityTypeId(),
-              'entity_bundle' => $entity->bundle(),
-            ]),
-            'options' => [
-              'query' => [
-                FormBuilderInterface::AJAX_FORM_REQUEST => TRUE,
-              ],
-            ],
+            'class' => ['use-ajax', 'button', 'button--small'],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => Json::encode(['width' => '60%']),
           ],
         ],
       ];
