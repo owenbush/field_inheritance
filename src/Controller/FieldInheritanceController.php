@@ -31,7 +31,7 @@ class FieldInheritanceController extends ControllerBase implements ContainerInje
     $inheritance_entity->setDestinationEntityType($entity_type);
     $inheritance_entity->setDestinationEntityBundle($entity_bundle);
 
-    $form_object = $this->entityTypeManager()->getFormObject('field_inheritance', 'add');
+    $form_object = $this->entityTypeManager()->getFormObject('field_inheritance', 'ajax');
     $form_object->setEntity($inheritance_entity);
     $form_state = (new FormState())
       ->setFormObject($form_object)

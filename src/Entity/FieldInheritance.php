@@ -16,6 +16,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "form" = {
  *       "add" = "Drupal\field_inheritance\Form\FieldInheritanceForm",
  *       "edit" = "Drupal\field_inheritance\Form\FieldInheritanceForm",
+ *       "ajax" = "Drupal\field_inheritance\Form\FieldInheritanceAjaxForm",
  *       "delete" = "Drupal\field_inheritance\Form\FieldInheritanceDeleteForm"
  *     },
  *     "route_provider" = {
