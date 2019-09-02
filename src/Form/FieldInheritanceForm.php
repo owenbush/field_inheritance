@@ -14,9 +14,6 @@ use Drupal\field_inheritance\FieldInheritancePluginManager;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Url;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Request;
-use Drupal\Core\Ajax\CloseModalDialogCommand;
 
 /**
  * Class FieldInheritanceForm.
@@ -59,13 +56,6 @@ class FieldInheritanceForm extends EntityForm {
   protected $fieldInheritance;
 
   /**
-   * The current request.
-   *
-   * @var \Symfony\Component\HttpFoundation\Request
-   */
-  protected $request;
-
-  /**
    * Construct an FieldInheritanceForm.
    *
    * @param \Drupal\Core\Messenger\Messenger $messenger
@@ -78,16 +68,13 @@ class FieldInheritanceForm extends EntityForm {
    *   The entity type bundle info service.
    * @param \Drupal\field_inheritance\FieldInheritancePluginManager $field_inheritance
    *   The field inheritance plugin manager.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
    */
-  public function __construct(Messenger $messenger, EntityFieldManager $entity_field_manager, EntityTypeManager $entity_type_manager, EntityTypeBundleInfo $entity_type_bundle_info, FieldInheritancePluginManager $field_inheritance, RequestStack $request_stack) {
+  public function __construct(Messenger $messenger, EntityFieldManager $entity_field_manager, EntityTypeManager $entity_type_manager, EntityTypeBundleInfo $entity_type_bundle_info, FieldInheritancePluginManager $field_inheritance) {
     $this->messenger = $messenger;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->fieldInheritance = $field_inheritance;
-    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**
