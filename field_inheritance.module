@@ -198,6 +198,19 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
           }
         }
       }
+
+      $form['field_inheritance']['fields']['message'] = [
+        '#type' => 'markup',
+        '#markup' => '<div id="field-inheritance-ajax-message"></div>'
+      ];
+
+      $form['field_inheritance']['fields']['ajax_container'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'id' => 'field-inheritance-ajax-container',
+        ],
+      ];
+
       $form['field_inheritance']['fields']['add'] = [
         '#type' => 'fieldset',
         '#access' => \Drupal::currentUser()->hasPermission('administer field inheritance'),
