@@ -4,3 +4,11 @@ field_inheritance.field_inheritance:
   description: 'Configure field inheritance for entities.'
   route_name: field_inheritance.field_inheritance
   parent: system.admin_structure
+
+# Field Inheritance settings admin page.
+field_inheritance.admin.structure.settings:
+  title: 'Settings'
+  description: 'Configure field inheritance'
+  route_name:  field_inheritance.settings
+  parent: field_inheritance.field_inheritance
+  weight: 0

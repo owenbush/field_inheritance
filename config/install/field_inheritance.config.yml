@@ -1,0 +1,2 @@
+excluded_entities: 'comment,contact_message,shortcut,user,menu_link_content'
+excluded_bundles: ''

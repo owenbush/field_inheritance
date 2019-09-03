@@ -15,3 +15,12 @@ field_inheritance.creation_form:
     _controller: '\Drupal\field_inheritance\Controller\FieldInheritanceController::ajaxCreationForm'
   requirements:
     _permission: 'administer field inheritance'
+
+# Field Inheritance settings admin page.
+field_inheritance.settings:
+  path: '/admin/structure/field_inheritance/settings'
+  defaults:
+    _form: '\Drupal\field_inheritance\Form\FieldInheritanceSettingsForm'
+    _title: 'Settings'
+  requirements:
+    _permission: 'administer field inheritance'

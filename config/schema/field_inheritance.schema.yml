@@ -1,0 +1,10 @@
+field_inheritance.config:
+  type: config_object
+  label: 'Field Inheritance Settings Config'
+  mapping:
+    excluded_entities:
+      type: string
+      label: 'The excluded entity types'
+    excluded_bundles:
+      type: string
+      label: 'The excluded entity bundles'

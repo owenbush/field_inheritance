@@ -86,8 +86,7 @@ class FieldInheritanceForm extends EntityForm {
       $container->get('entity_field.manager'),
       $container->get('entity_type.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('plugin.manager.field_inheritance'),
-      $container->get('request_stack')
+      $container->get('plugin.manager.field_inheritance')
     );
   }
 

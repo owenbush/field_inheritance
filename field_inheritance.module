@@ -122,6 +122,24 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
       $entity_type = $entity->getEntityTypeId();
       $bundle = $entity->bundle();
 
+      $config = \Drupal::config('field_inheritance.config');
+      $excluded_entities = $config->get('excluded_entities');
+      $excluded_bundles = $config->get('excluded_bundles');
+
+      if (!empty($excluded_entities)) {
+        $excluded_entities = explode(',', $excluded_entities);
+        if (array_search($entity_type, $excluded_entities) !== FALSE) {
+          return;
+        }
+      }
+
+      if (!empty($excluded_bundles)) {
+        $excluded_bundles = explode(',', $excluded_bundles);
+        if (array_search($entity_type . ':' . $bundle, $excluded_bundles) !== FALSE) {
+          return;
+        }
+      }
+
       $state_key = $entity->getEntityTypeId() . ':' . $entity->uuid();
       $state = \Drupal::keyValue('field_inheritance');
       $state_values = $state->get($state_key);

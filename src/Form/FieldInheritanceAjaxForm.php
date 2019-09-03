@@ -16,7 +16,7 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Url;
 use Drupal\Core\Ajax\CloseModalDialogCommand;
 use Drupal\Core\Ajax\AppendCommand;
-use Drupal\Core\Ajax\ScrollTopCommand;
+use Drupal\views\Ajax\ScrollTopCommand;
 use Drupal\Core\Entity\EntityFormBuilder;
 use Drupal\Core\Render\Renderer;
 
@@ -73,7 +73,6 @@ class FieldInheritanceAjaxForm extends FieldInheritanceForm {
       $container->get('entity_type.manager'),
       $container->get('entity_type.bundle.info'),
       $container->get('plugin.manager.field_inheritance'),
-      $container->get('request_stack'),
       $container->get('entity.form_builder'),
       $container->get('renderer')
     );
@@ -118,6 +117,11 @@ class FieldInheritanceAjaxForm extends FieldInheritanceForm {
       '#theme' => 'status_messages',
       '#message_list' => $this->messenger->all(),
     ];
+
+    // Prevent duplicate messages appearing.
+    $this->messenger->deleteAll();
+
+    // Render the messages.
     $messages = $this->renderer->render($message);
     $response->addCommand(new HtmlCommand('#field-inheritance-ajax-message', $messages));
     $response->addCommand(new ScrollTopCommand('#field-inheritance-ajax-message'));
