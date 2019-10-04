@@ -196,6 +196,12 @@ class FieldInheritanceForm extends EntityForm {
       if (!empty($field_values['destination_entity_bundle'])) {
         $destination_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($field_values['destination_entity_type'], $field_values['destination_entity_bundle']));
         $destination_entity_fields = array_combine($destination_entity_fields, $destination_entity_fields);
+
+        // You should never be able to use the inherited field as part of an
+        // inheritance as that creates an infinite loop.
+        if (!empty($field_inheritance->id() && !empty($destination_entity_fields[$field_inheritance->id()]))) {
+          unset($destination_entity_fields[$field_inheritance->id()]);
+        }
       }
     }
 
