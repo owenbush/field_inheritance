@@ -163,12 +163,14 @@ class FieldInheritanceForm extends EntityForm {
     if (!$field_inheritance->isNew()) {
       $field_values['source_entity_type'] = $field_inheritance->sourceEntityType();
       $field_values['source_entity_bundle'] = $field_inheritance->sourceEntityBundle();
+      $field_values['source_field'] = $field_inheritance->sourceField();
       $field_values['destination_entity_type'] = $field_inheritance->destinationEntityType();
       $field_values['destination_entity_bundle'] = $field_inheritance->destinationEntityBundle();
     }
     elseif (!empty($form_values)) {
       $field_values['source_entity_type'] = $form_values['source_entity_type'];
       $field_values['source_entity_bundle'] = $form_values['source_entity_bundle'];
+      $field_values['source_field'] = $form_values['source_field'];
       $field_values['destination_entity_type'] = $form_values['destination_entity_type'];
       $field_values['destination_entity_bundle'] = $form_values['destination_entity_bundle'];
     }
@@ -179,6 +181,10 @@ class FieldInheritanceForm extends EntityForm {
 
     if (!empty($field_inheritance->destinationEntityBundle()) && empty($form_values)) {
       $field_values['destination_entity_bundle'] = $field_inheritance->destinationEntityBundle();
+    }
+
+    if (!empty($form_values['source_field'])) {
+      $field_values['source_field'] = $form_values['source_field'];
     }
 
     if (!empty($field_values['source_entity_type'])) {
@@ -258,6 +264,15 @@ class FieldInheritanceForm extends EntityForm {
       '#options' => $source_entity_fields,
       '#required' => TRUE,
       '#default_value' => $field_inheritance->sourceField(),
+      '#ajax' => [
+        'callback' => '::updateFieldOptions',
+        'wrapper' => 'field-inheritance-add-form--wrapper',
+        'event' => 'change',
+        'progress' => [
+          'type' => 'throbber',
+          'message' => $this->t('Updating plugin options...'),
+        ],
+      ],
       '#states' => [
         'visible' => [
           'select[name="source_entity_type"]' => ['!value' => ''],
@@ -334,6 +349,19 @@ class FieldInheritanceForm extends EntityForm {
 
     $plugins = array_keys($this->fieldInheritance->getDefinitions());
     $plugins = array_combine($plugins, $plugins);
+
+    // If a source field is set, then hide plugins not applicable to that field
+    // type.
+    if (!empty($field_values['source_field'])) {
+      $source_definitions = $this->entityFieldManager->getFieldDefinitions($field_values['source_entity_type'], $field_values['source_entity_bundle']);
+      foreach ($plugins as $key => $plugin) {
+        $plugin_definition = $this->fieldInheritance->getDefinition($plugin);
+        $field_types = $plugin_definition['types'];
+        if (!in_array($source_definitions[$field_values['source_field']]->getType(), $field_types)) {
+          unset($plugins[$key]);
+        }
+      }
+    }
 
     $form['plugin'] = [
       '#type' => 'select',
