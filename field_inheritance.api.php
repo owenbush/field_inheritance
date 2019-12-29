@@ -13,7 +13,7 @@
  * @var Drupal\Core\Field\FieldDefinitionInterface $field
  *   The field context.
  */
-function hook_recurring_events_inheritance_class_alter(&$class, $field) {
+function hook_field_inheritance_inheritance_class_alter(&$class, $field) {
   if ($field->plugin() === 'entity_reference_inheritance') {
     $class = '\Drupal\my_module\EntityReferenceFieldInheritanceFactory';
   }
