@@ -81,6 +81,9 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
           $settings = array_merge($settings, $source_field->getSettings());
           $type = $source_field->getType();
         }
+        else {
+          continue;
+        }
 
         // Set the factory class used to inherit the data from the source.
         $class = '\Drupal\field_inheritance\FieldInheritanceFactory';
@@ -118,24 +121,24 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
   $form_object = $form_state->getFormObject();
   if (!empty($form_object) && $form_object instanceof EntityForm) {
     $entity = $form_state->getFormObject()->getEntity();
-    if (!empty($entity) && $entity instanceof FieldableEntityInterface) {
+    if (!empty($entity) && $entity instanceof FieldableEntityInterface && strpos($form['#id'], 'delete') === FALSE) {
       $entity_type = $entity->getEntityTypeId();
       $bundle = $entity->bundle();
 
       $config = \Drupal::config('field_inheritance.config');
-      $excluded_entities = $config->get('excluded_entities');
-      $excluded_bundles = $config->get('excluded_bundles');
+      $included_entities = $config->get('included_entities');
+      $included_bundles = $config->get('included_bundles');
 
-      if (!empty($excluded_entities)) {
-        $excluded_entities = explode(',', $excluded_entities);
-        if (array_search($entity_type, $excluded_entities) !== FALSE) {
+      if (!empty($included_entities)) {
+        $included_entities = explode(',', $included_entities);
+        if (array_search($entity_type, $included_entities) === FALSE) {
           return;
         }
       }
 
-      if (!empty($excluded_bundles)) {
-        $excluded_bundles = explode(',', $excluded_bundles);
-        if (array_search($entity_type . ':' . $bundle, $excluded_bundles) !== FALSE) {
+      if (!empty($included_bundles)) {
+        $included_bundles = explode(',', $included_bundles);
+        if (array_search($entity_type . ':' . $bundle, $included_bundles) === FALSE) {
           return;
         }
       }

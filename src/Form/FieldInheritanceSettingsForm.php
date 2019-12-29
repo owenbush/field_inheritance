@@ -101,8 +101,8 @@ class FieldInheritanceSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('field_inheritance.config')
-      ->set('excluded_entities', implode(',', array_filter($form_state->getValue('excluded_entities'))))
-      ->set('excluded_bundles', implode(',', array_filter($form_state->getValue('excluded_bundles'))))
+      ->set('included_entities', implode(',', array_filter($form_state->getValue('included_entities'))))
+      ->set('included_bundles', implode(',', array_filter($form_state->getValue('included_bundles'))))
       ->save();
 
     parent::submitForm($form, $form_state);
@@ -128,12 +128,12 @@ class FieldInheritanceSettingsForm extends ConfigFormBase {
     }));
     $entity_types = array_combine($entity_types, $entity_types);
 
-    $form['excluded_entities'] = [
+    $form['included_entities'] = [
       '#type' => 'checkboxes',
-      '#title' => $this->t('Excluded Entity Types'),
-      '#description' => $this->t('Select the entity types that should not be able to inherit data'),
+      '#title' => $this->t('Included Entity Types'),
+      '#description' => $this->t('Select the entity types that should be able to inherit data'),
       '#options' => $entity_types,
-      '#default_value' => explode(',', $config->get('excluded_entities')),
+      '#default_value' => explode(',', $config->get('included_entities')),
     ];
 
     $entity_bundles = []; 
@@ -145,12 +145,12 @@ class FieldInheritanceSettingsForm extends ConfigFormBase {
     }
     $entity_bundles = array_combine($entity_bundles, $entity_bundles);
 
-    $form['excluded_bundles'] = [
+    $form['included_bundles'] = [
       '#type' => 'checkboxes',
-      '#title' => $this->t('Excluded Entity Bundles'),
-      '#description' => $this->t('Select the entity bundles that should not be able to inherit data'),
+      '#title' => $this->t('Included Entity Bundles'),
+      '#description' => $this->t('Select the entity bundles that should be able to inherit data'),
       '#options' => $entity_bundles,
-      '#default_value' => explode(',', $config->get('excluded_bundles')),
+      '#default_value' => explode(',', $config->get('included_bundles')),
     ];
 
 

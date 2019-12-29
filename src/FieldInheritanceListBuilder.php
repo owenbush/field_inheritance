@@ -31,9 +31,9 @@ class FieldInheritanceListBuilder extends ConfigEntityListBuilder {
     $row['label'] = $entity->label();
     $row['id'] = $entity->id();
     $row['type'] = $entity->type();
-    $row['source_entity'] = $entity->sourceEntityType() . ' > ' . $entity->sourceEntityBundle();
+    $row['source_entity'] = $entity->sourceEntityType() . ':' . $entity->sourceEntityBundle();
     $row['source_field'] = $entity->sourceField();
-    $row['destination_entity'] = $entity->destinationEntityType() . ' > ' . $entity->destinationEntityBundle();
+    $row['destination_entity'] = $entity->destinationEntityType() . ':' . $entity->destinationEntityBundle();
     $row['destination_field'] = $entity->destinationField() ?: $this->t('N/A');
     return $row + parent::buildRow($entity);
   }

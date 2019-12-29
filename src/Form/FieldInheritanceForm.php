@@ -158,6 +158,8 @@ class FieldInheritanceForm extends EntityForm {
     $source_entity_bundles = $destination_entity_bundles = [];
     $source_entity_fields = $destination_entity_fields = [];
 
+    $default_values = ['' => $this->t('-- Select --')];
+
     $field_values = [];
     $form_values = $form_state->getValues();
     if (!$field_inheritance->isNew()) {
@@ -192,7 +194,7 @@ class FieldInheritanceForm extends EntityForm {
       $source_entity_bundles = array_combine($source_entity_bundles, $source_entity_bundles);
       if (!empty($field_values['source_entity_bundle'])) {
         $source_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($field_values['source_entity_type'], $field_values['source_entity_bundle']));
-        $source_entity_fields = array_combine($source_entity_fields, $source_entity_fields);
+        $source_entity_fields = $default_values + array_combine($source_entity_fields, $source_entity_fields);
       }
     }
 
@@ -201,7 +203,7 @@ class FieldInheritanceForm extends EntityForm {
       $destination_entity_bundles = array_combine($destination_entity_bundles, $destination_entity_bundles);
       if (!empty($field_values['destination_entity_bundle'])) {
         $destination_entity_fields = array_keys($this->entityFieldManager->getFieldDefinitions($field_values['destination_entity_type'], $field_values['destination_entity_bundle']));
-        $destination_entity_fields = array_combine($destination_entity_fields, $destination_entity_fields);
+        $destination_entity_fields = $default_values + array_combine($destination_entity_fields, $destination_entity_fields);
 
         // You should never be able to use the inherited field as part of an
         // inheritance as that creates an infinite loop.
@@ -213,7 +215,7 @@ class FieldInheritanceForm extends EntityForm {
 
     $form['source'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Source Configuration'),
+      '#title' => $this->t('Source of Data'),
     ];
 
     $form['source']['source_entity_type'] = [
@@ -283,7 +285,7 @@ class FieldInheritanceForm extends EntityForm {
 
     $form['destination'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Destination Configuration'),
+      '#title' => $this->t('Destination of Data'),
     ];
 
     $form['destination']['destination_entity_type'] = [
@@ -347,15 +349,16 @@ class FieldInheritanceForm extends EntityForm {
       ],
     ];
 
-    $plugins = array_keys($this->fieldInheritance->getDefinitions());
-    $plugins = array_combine($plugins, $plugins);
+    foreach($this->fieldInheritance->getDefinitions() as $plugin_id => $plugin) {
+      $plugins[$plugin_id] = $plugin['name']->__toString();
+    }
 
     // If a source field is set, then hide plugins not applicable to that field
     // type.
     if (!empty($field_values['source_field'])) {
       $source_definitions = $this->entityFieldManager->getFieldDefinitions($field_values['source_entity_type'], $field_values['source_entity_bundle']);
       foreach ($plugins as $key => $plugin) {
-        $plugin_definition = $this->fieldInheritance->getDefinition($plugin);
+        $plugin_definition = $this->fieldInheritance->getDefinition($key);
         $field_types = $plugin_definition['types'];
         if (!in_array($source_definitions[$field_values['source_field']]->getType(), $field_types)) {
           unset($plugins[$key]);
@@ -363,7 +366,12 @@ class FieldInheritanceForm extends EntityForm {
       }
     }
 
-    $form['plugin'] = [
+    $form['advanced'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Advanced'),
+    ];
+
+    $form['advanced']['plugin'] = [
       '#type' => 'select',
       '#title' => $this->t('Inheritance Plugin'),
       '#description' => $this->t('Select the plugin used to perform the inheritance.'),

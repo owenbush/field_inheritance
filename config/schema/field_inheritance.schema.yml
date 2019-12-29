@@ -2,9 +2,9 @@ field_inheritance.config:
   type: config_object
   label: 'Field Inheritance Settings Config'
   mapping:
-    excluded_entities:
+    included_entities:
       type: string
-      label: 'The excluded entity types'
-    excluded_bundles:
+      label: 'The included entity types'
+    included_bundles:
       type: string
-      label: 'The excluded entity bundles'
+      label: 'The included entity bundles'
