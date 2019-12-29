@@ -82,7 +82,16 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
           $type = $source_field->getType();
         }
         else {
-          continue;
+          // This may be a basefield.
+          $basefields = \Drupal::service('entity_field.manager')->getBaseFieldDefinitions($field->sourceEntityType());
+          if (!empty($basefields[$field->sourceField()])) {
+            $source_field = $basefields[$field->sourceField()];
+            $settings = array_merge($settings, $source_field->getSettings());
+            $type = $source_field->getType();
+          }
+          else {
+            continue;
+          }
         }
 
         // Set the factory class used to inherit the data from the source.
