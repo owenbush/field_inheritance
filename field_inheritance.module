@@ -14,7 +14,6 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 
@@ -220,7 +219,7 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
                 '#default_value' => !empty($state_values[$field->id()]['entity']) ? \Drupal::entityTypeManager()->getStorage($field->sourceEntityType())->load($state_values[$field->id()]['entity']) : FALSE,
                 '#states' => [
                   'invisible' => [
-                    'input[name="field_inheritance_field_skip_' . $field->id() . '"]' => ['checked' => TRUE]
+                    'input[name="field_inheritance_field_skip_' . $field->id() . '"]' => ['checked' => TRUE],
                   ],
                 ],
               ],
@@ -231,7 +230,7 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
 
       $form['field_inheritance']['fields']['message'] = [
         '#type' => 'markup',
-        '#markup' => '<div id="field-inheritance-ajax-message"></div>'
+        '#markup' => '<div id="field-inheritance-ajax-message"></div>',
       ];
 
       $form['field_inheritance']['fields']['ajax_container'] = [
@@ -275,7 +274,7 @@ function field_inheritance_entity_form_submit(&$form, FormStateInterface $form_s
   $state = \Drupal::keyValue('field_inheritance');
   $entity = $form_state->getFormObject()->getEntity();
   $values = $form_state->getValues();
-  
+
   $state_key = $entity->getEntityTypeId() . ':' . $entity->uuid();
   $state_value = [];
 
