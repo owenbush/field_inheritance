@@ -13,7 +13,6 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\field_inheritance\FieldInheritancePluginManager;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
-use Drupal\Core\Url;
 
 /**
  * Class FieldInheritanceForm.
@@ -349,7 +348,7 @@ class FieldInheritanceForm extends EntityForm {
       ],
     ];
 
-    foreach($this->fieldInheritance->getDefinitions() as $plugin_id => $plugin) {
+    foreach ($this->fieldInheritance->getDefinitions() as $plugin_id => $plugin) {
       $plugins[$plugin_id] = $plugin['name']->__toString();
     }
 
@@ -358,11 +357,19 @@ class FieldInheritanceForm extends EntityForm {
     if (!empty($field_values['source_field'])) {
       $source_definitions = $this->entityFieldManager->getFieldDefinitions($field_values['source_entity_type'], $field_values['source_entity_bundle']);
       foreach ($plugins as $key => $plugin) {
+        if ($key === '') {
+          continue;
+        }
         $plugin_definition = $this->fieldInheritance->getDefinition($key);
         $field_types = $plugin_definition['types'];
         if (!in_array($source_definitions[$field_values['source_field']]->getType(), $field_types)) {
           unset($plugins[$key]);
         }
+      }
+
+      $default_plugins = ['' => $this->t('- Select -')];
+      if (empty($plugins)) {
+        $plugins = $default_plugins;
       }
     }
 
