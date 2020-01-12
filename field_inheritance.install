@@ -12,8 +12,10 @@ function field_inheritance_update_8001() {
   $inheritances = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple();
   if (!empty($inheritances)) {
     foreach ($inheritances as $inheritance) {
-      $inheritance->setPlugin('default_inheritance');
-      $inheritance->save();
+      if ($inheritance->plugin() !== 'entity_reference_inheritance') {
+        $inheritance->setPlugin('default_inheritance');
+        $inheritance->save();
+      }
     }
   }
 }
