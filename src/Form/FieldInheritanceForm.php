@@ -362,8 +362,10 @@ class FieldInheritanceForm extends EntityForm {
         }
         $plugin_definition = $this->fieldInheritance->getDefinition($key);
         $field_types = $plugin_definition['types'];
-        if (!in_array($source_definitions[$field_values['source_field']]->getType(), $field_types)) {
-          unset($plugins[$key]);
+        if (!in_array('any', $field_types)) {
+          if (!in_array($source_definitions[$field_values['source_field']]->getType(), $field_types)) {
+            unset($plugins[$key]);
+          }
         }
       }
 

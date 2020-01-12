@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Installation and update hooks for the field_inheritance module.
+ */
+
+/**
+ * Update existing plugins to use the new default plugin.
+ */
+function field_inheritance_update_8001() {
+  $inheritances = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple();
+  if (!empty($inheritances)) {
+    foreach ($inheritances as $inheritance) {
+      $inheritance->setPlugin('default_inheritance');
+      $inheritance->save();
+    }
+  }
+}
