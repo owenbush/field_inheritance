@@ -44,6 +44,7 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
   if (!empty($inherited_field_ids)) {
     $inherited_fields = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple($inherited_field_ids);
     if (!empty($inherited_fields)) {
+      $x = 0;
       foreach ($inherited_fields as $field) {
         // We are only interested in adding computed fields to the destination
         // entity type.
@@ -116,7 +117,12 @@ function field_inheritance_entity_bundle_field_info_alter(&$fields, EntityTypeIn
           ->setTranslatable(FALSE)
           ->setRevisionable(FALSE)
           ->setReadOnly(TRUE)
-          ->setDisplayConfigurable('view', TRUE);
+          ->setDisplayConfigurable('view', TRUE)
+          ->setDisplayOptions('view', [
+            'label' => 'visible',
+            'weight' => (50 + $x),
+          ]);
+        $x++;
       }
     }
   }
