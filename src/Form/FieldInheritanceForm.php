@@ -352,6 +352,8 @@ class FieldInheritanceForm extends EntityForm {
       $plugins[$plugin_id] = $plugin['name']->__toString();
     }
 
+    $global_plugins = [];
+
     // If a source field is set, then hide plugins not applicable to that field
     // type.
     if (!empty($field_values['source_field'])) {
@@ -367,6 +369,16 @@ class FieldInheritanceForm extends EntityForm {
             unset($plugins[$key]);
           }
         }
+        // Global plugins should not take precedent over more specific plugins.
+        if (in_array('any', $field_types)) {
+          $global_plugins[$key] = $plugins[$key];
+          unset($plugins[$key]);
+        }
+      }
+
+      // If we have some global plugins, place them at the end of the list.
+      if (!empty($global_plugins)) {
+        $plugins = array_merge($plugins, $global_plugins);
       }
 
       $default_plugins = ['' => $this->t('- Select -')];
