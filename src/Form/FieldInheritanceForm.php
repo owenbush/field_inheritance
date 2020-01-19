@@ -112,11 +112,22 @@ class FieldInheritanceForm extends EntityForm {
       '#required' => TRUE,
     ];
 
+    $machine_name_prefix = '';
+    if ($field_inheritance->isNew()) {
+      if (!empty($this->entity->destination_entity_type) && !empty($this->entity->destination_entity_bundle)) {
+        $machine_name_prefix = $this->entity->destination_entity_type . '.' . $this->entity->destination_entity_bundle . '.';
+      }
+      else {
+        $machine_name_prefix = '[entity-type].[bundle].';
+      }
+    }
+
     $form['id'] = [
       '#type' => 'machine_name',
       '#default_value' => $field_inheritance->id(),
+      '#field_prefix' => $machine_name_prefix,
       '#machine_name' => [
-        'exists' => '\Drupal\field_inheritance\Entity\FieldInheritance::load',
+        'exists' => [$this, 'exists'],
       ],
       '#disabled' => !$field_inheritance->isNew(),
     ];
@@ -491,6 +502,29 @@ class FieldInheritanceForm extends EntityForm {
     $response = new AjaxResponse();
     $response->addCommand(new HtmlCommand('#field-inheritance-add-form--wrapper', $form));
     return $response;
+  }
+
+  /**
+   * Determines if the field inheritance already exists.
+   *
+   * @param string|int $entity_id
+   *   The entity ID.
+   * @param array $element
+   *   The form element.
+   *
+   * @return bool
+   *   TRUE if the display mode exists, FALSE otherwise.
+   */
+  public function exists($entity_id, array $element) {
+    if (!empty($this->entity->destination_entity_type) && !empty($this->entity->destination_entity_bundle)) {
+      $id = $this->entity->destination_entity_type . '.' . $this->entity->destination_entity_bundle . '.' . $entity_id;
+      $return = (bool) $this->entityTypeManager
+        ->getStorage($this->entity->getEntityTypeId())
+        ->getQuery()
+        ->condition('id', $id)
+        ->execute();
+      return $return;
+    }
   }
 
 }

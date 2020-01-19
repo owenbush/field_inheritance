@@ -3,6 +3,7 @@
 namespace Drupal\field_inheritance\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Defines the Field inheritance entity.
@@ -241,6 +242,14 @@ class FieldInheritance extends ConfigEntityBase implements FieldInheritanceInter
   public function setPlugin($plugin) {
     $this->plugin = $plugin;
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function save() {
+    $this->id = $this->destinationEntityType() . '.' . $this->destinationEntityBundle() . '.' . $this->id();
+    parent::save();
   }
 
 }
