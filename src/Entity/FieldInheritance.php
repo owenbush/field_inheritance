@@ -134,6 +134,14 @@ class FieldInheritance extends ConfigEntityBase implements FieldInheritanceInter
   /**
    * {@inheritdoc}
    */
+  public function idWithoutTypeAndBundle() {
+    $prefix = $this->destinationEntityType() . '.' . $this->destinationEntityBundle() . '.';
+    return str_replace($prefix, '', $this->id());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function sourceEntityType() {
     return isset($this->sourceEntityType) ? $this->sourceEntityType : NULL;
   }
