@@ -176,7 +176,7 @@ function field_inheritance_form_alter(&$form, FormStateInterface $form_state, $f
         '#type' => 'checkbox',
         '#title' => t('Enable inheritance for this entity?'),
         '#description' => t('Enabling inheritance will allow data to be pulled in from a source entity into this entity.'),
-        '#default_value' => $state_values['enabled'] ?? FALSE,
+        '#default_value' => $state_values['enabled'] ?? NULL,
       ];
 
       $form['field_inheritance']['fields'] = [
