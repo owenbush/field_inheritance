@@ -444,7 +444,7 @@ class FieldInheritanceForm extends EntityForm {
         $plugin_definition = $this->fieldInheritance->getDefinition($values['plugin']);
         $field_types = $plugin_definition['types'];
 
-        if (!in_array($source_definitions[$values['source_field']]->getType(), $field_types)) {
+        if (!in_array('any', $field_types) && !in_array($source_definitions[$values['source_field']]->getType(), $field_types)) {
           $message = $this->t('The selected plugin @plugin does not support @source_type fields. The supported field types are: @field_types', [
             '@plugin' => $values['plugin'],
             '@source_type' => $source_definitions[$values['source_field']]->getType(),
