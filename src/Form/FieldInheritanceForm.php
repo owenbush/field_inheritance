@@ -115,10 +115,10 @@ class FieldInheritanceForm extends EntityForm {
     $machine_name_prefix = '';
     if ($field_inheritance->isNew()) {
       if (!empty($this->entity->destination_entity_type) && !empty($this->entity->destination_entity_bundle)) {
-        $machine_name_prefix = $this->entity->destination_entity_type . '.' . $this->entity->destination_entity_bundle . '.';
+        $machine_name_prefix = $this->entity->destination_entity_type . '_' . $this->entity->destination_entity_bundle . '_';
       }
       else {
-        $machine_name_prefix = '[entity-type].[bundle].';
+        $machine_name_prefix = '[entity-type]_[bundle]_';
       }
     }
 
@@ -517,7 +517,7 @@ class FieldInheritanceForm extends EntityForm {
    */
   public function exists($entity_id, array $element) {
     if (!empty($this->entity->destination_entity_type) && !empty($this->entity->destination_entity_bundle)) {
-      $id = $this->entity->destination_entity_type . '.' . $this->entity->destination_entity_bundle . '.' . $entity_id;
+      $id = $this->entity->destination_entity_type . '_' . $this->entity->destination_entity_bundle . '_' . $entity_id;
       $return = (bool) $this->entityTypeManager
         ->getStorage($this->entity->getEntityTypeId())
         ->getQuery()

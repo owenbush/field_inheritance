@@ -3,7 +3,6 @@
 namespace Drupal\field_inheritance\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Defines the Field inheritance entity.
@@ -135,7 +134,7 @@ class FieldInheritance extends ConfigEntityBase implements FieldInheritanceInter
    * {@inheritdoc}
    */
   public function idWithoutTypeAndBundle() {
-    $prefix = $this->destinationEntityType() . '.' . $this->destinationEntityBundle() . '.';
+    $prefix = $this->destinationEntityType() . '_' . $this->destinationEntityBundle() . '_';
     return str_replace($prefix, '', $this->id());
   }
 
@@ -256,7 +255,7 @@ class FieldInheritance extends ConfigEntityBase implements FieldInheritanceInter
    * {@inheritdoc}
    */
   public function save() {
-    $this->id = $this->destinationEntityType() . '.' . $this->destinationEntityBundle() . '.' . $this->id();
+    $this->id = $this->destinationEntityType() . '_' . $this->destinationEntityBundle() . '_' . $this->id();
     parent::save();
   }
 
