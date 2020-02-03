@@ -11,7 +11,6 @@
 function field_inheritance_views_data_alter(array &$data) {
   // Create a views field for each of the inherited fields.
   $inherited_fields = \Drupal::entityTypeManager()->getStorage('field_inheritance')->loadMultiple();
-  $set = FALSE;
   if (!empty($inherited_fields)) {
     foreach ($inherited_fields as $field) {
       $destination_entity = $field->destinationEntityType();

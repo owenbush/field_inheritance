@@ -255,7 +255,9 @@ class FieldInheritance extends ConfigEntityBase implements FieldInheritanceInter
    * {@inheritdoc}
    */
   public function save() {
-    $this->id = $this->destinationEntityType() . '_' . $this->destinationEntityBundle() . '_' . $this->id();
+    if (strpos($this->id(), $this->destinationEntityType() . '_' . $this->destinationEntityBundle() . '_') === FALSE) {
+      $this->id = $this->destinationEntityType() . '_' . $this->destinationEntityBundle() . '_' . $this->id();
+    }
     parent::save();
   }
 
