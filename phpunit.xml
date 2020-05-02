@@ -8,9 +8,7 @@
     </php>
     <testsuites>
         <testsuite name="Field Inheritance Test Suite">
-            <directory>./tests</directory>
-            <!-- directory>./modules/recurring_events_registration/tests</directory -->
-            <!-- directory>./modules/recurring_events_views/tests</directory -->
+            <!-- directory>./tests</directory -->
         </testsuite>
     </testsuites>
 </phpunit>
