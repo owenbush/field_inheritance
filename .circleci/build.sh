@@ -58,9 +58,6 @@ echo "==> Validate requirements."
 ! command -v composer > /dev/null && echo "ERROR: Composer (https://getcomposer.org/) is required for this script to run." && exit 1
 ! command -v jq > /dev/null && echo "ERROR: jq (https://stedolan.github.io/jq/) is required for this script to run." && exit 1
 
-# Downgrade composer due to: https://github.com/octobercms/october/issues/5033
-composer self-update --1
-
 echo "==> Validate Composer config."
 composer validate --ansi --strict
 
