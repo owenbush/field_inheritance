@@ -11,7 +11,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\FieldableEntityInterface;
 
 /**
- * Class FieldInheritanceSettingsForm.
+ * Provides a form for configuring field inheritance settings.
  *
  * @ingroup field_inheritance
  */

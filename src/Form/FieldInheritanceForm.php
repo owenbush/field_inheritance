@@ -15,7 +15,7 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 
 /**
- * Class FieldInheritanceForm.
+ * Provides a form for managing field inheritance entities.
  */
 class FieldInheritanceForm extends EntityForm {
 
@@ -359,6 +359,7 @@ class FieldInheritanceForm extends EntityForm {
       ],
     ];
 
+    $plugins = [];
     foreach ($this->fieldInheritance->getDefinitions() as $plugin_id => $plugin) {
       $plugins[$plugin_id] = $plugin['name']->__toString();
     }
