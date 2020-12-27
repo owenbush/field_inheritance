@@ -17,6 +17,7 @@ job-build: &job-build
         && sudo -E docker-php-ext-install -j$(nproc) iconv \
         && if [ "$(php -r "echo PHP_MAJOR_VERSION;")" -gt 5 ] && [ "$(php -r "echo PHP_MINOR_VERSION;")" -gt 3 ] ; then sudo -E docker-php-ext-configure gd --with-freetype --with-jpeg; else sudo -E docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/; fi \
         && sudo -E docker-php-ext-install -j$(nproc) gd
+    - run: sudo composer self-update --1
     - run: .circleci/build.sh
     - run: .circleci/lint.sh
     - run: .circleci/test.sh
@@ -87,11 +88,6 @@ workflows:
   version: 2
   main:
     jobs:
-      - install-composer:
-          executor: php/default
-          steps:
-            - php/install-composer:
-                install-version: 1.10.16
       - build-php-7.4:
           filters:
             tags:
