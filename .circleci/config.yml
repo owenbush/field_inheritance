@@ -31,11 +31,6 @@ job-build: &job-build
         when: always
 
 jobs:
-  install-composer:
-    executor: php/default
-    steps:
-      - php/install-composer:
-          install-version: 1.10.16
   build-php-7.4:
     <<: *container_config
     <<: *job-build
@@ -92,6 +87,11 @@ workflows:
   version: 2
   main:
     jobs:
+      - install-composer:
+          executor: php/default
+          steps:
+            - php/install-composer:
+                install-version: 1.10.16
       - build-php-7.4:
           filters:
             tags:
