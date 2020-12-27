@@ -18,7 +18,7 @@ use Drupal\Core\Entity\EntityFormBuilder;
 use Drupal\Core\Render\Renderer;
 
 /**
- * Class FieldInheritanceAjaxForm.
+ * Provides an AJAX form for managing field inheritance entities.
  */
 class FieldInheritanceAjaxForm extends FieldInheritanceForm {
 
