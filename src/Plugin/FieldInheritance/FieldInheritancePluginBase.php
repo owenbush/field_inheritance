@@ -338,9 +338,18 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
     $state_values = $state->get($state_key);
 
     if (!empty($state_values[$this->fieldInheritanceId]['entity'])) {
-      $source = $this->entityTypeManager->getStorage($this->sourceEntityType)->load($state_values[$this->fieldInheritanceId]['entity']);
-      if ($source->hasTranslation($this->langCode)) {
-        return $source->getTranslation($this->langCode);
+      if ($source = $this->entityTypeManager->getStorage($this->sourceEntityType)->load($state_values[$this->fieldInheritanceId]['entity'])) {
+        $context['data'] = $source;
+        $context += [
+          'operation' => 'entity_view',
+          'langcode' => $this->langCode,
+        ];
+        $candidates = $this->languageManager->getFallbackCandidates($context);
+        foreach ($candidates as $candidate) {
+          if ($source->hasTranslation($candidate)) {
+            return $source->getTranslation($candidate);
+          }
+        }
       }
     }
 
@@ -354,8 +363,16 @@ abstract class FieldInheritancePluginBase extends PluginBase implements FieldInh
    *   The translated destination entity.
    */
   protected function getDestinationEntity() {
-    if ($this->entity->hasTranslation($this->langCode)) {
-      return $this->entity->getTranslation($this->langCode);
+    $context['data'] = $this->entity;
+    $context += [
+      'operation' => 'entity_view',
+      'langcode' => $this->langCode,
+    ];
+    $candidates = $this->languageManager->getFallbackCandidates($context);
+    foreach ($candidates as $candidate) {
+      if ($this->entity->hasTranslation($candidate)) {
+        return $this->entity->getTranslation($candidate);
+      }
     }
     return $this->entity;
   }
